@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material and geometry</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+
+        //module
+        import * as THREE from "https://cdn.skypack.dev/three@0.132";
+        import OrbitControls from "https://cdn.skypack.dev/threejs-orbit-controls";
+        import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.19/+esm";
+        import Stats from "https://cdn.skypack.dev/stats.js.fps";
+
+        //GUIの追加
+        const gui = new GUI();
+
+        const stats = new Stats();
+        stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+        document.body.appendChild(stats.dom);
+
+        //sence
+        const scene = new THREE.Scene();
+
+        //camera
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            100
+        );
+        camera.position.set(1, 1, 2);
+
+        //renderの追加
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        //mess操作機能の追加
+        //マウス操作機能の追加
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; //滑らかに（徐々に）動かす
+        controls.dampingFactor = 0.2; //慣性力の設定
+        //物体の追加
+
+        /////////////////////
+        //バッファジオメトリ
+        const count = 50; //変数追加
+        const bufferGeometry = new THREE.BufferGeometry();
+
+        //「三角形の座標9点 * count」分の配列を用意する
+        const vertices = new Float32Array(9 * count);
+
+        //for文でランダムな値を代入
+        for (let i = 0; i < 9 * count; i++) {
+            vertices[i] = Math.random() - 0.5 * 2;
+            console.log(vertices[i]);
+        }
+
+        bufferGeometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(vertices, 3)
+        );
+
+        const bufferMaterial = new THREE.MeshBasicMaterial({ wireframe: true });
+        const buffer = new THREE.Mesh(bufferGeometry, bufferMaterial);
+        ///scene.add(buffer);
+
+
+        ////////////////////////
+        const boxGeometry = new THREE.BoxGeometry(1, 1, 1, 16, 16, 16);
+        const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 16);
+        const planeGeometry = new THREE.PlaneGeometry(10, 10);
+        const torusGeometry = new THREE.TorusGeometry(0.4, 0.1, 16, 100, 5);
+
+        const material = new THREE.MeshNormalMaterial({});
+
+        const box = new THREE.Mesh(boxGeometry, material);
+        const sphere = new THREE.Mesh(sphereGeometry, material);
+        sphere.position.set(1.5, 0, 0);
+
+        const plane = new THREE.Mesh(planeGeometry, material);
+        plane.position.set(0, -0.5, 0);
+        plane.rotation.x = -Math.PI * 0.5;
+
+        const torus = new THREE.Mesh(torusGeometry, material);
+        torus.position.set(-1.5, 0, 0);
+        torus.rotation.z = (Math.PI / 180) * 30;
+
+        scene.add(box, sphere, plane, torus);//シーンに追加
+        //追加
+        gui.add(box.position, "x", -3, 3, 0.1).name("transformX");
+        gui.add(box.position, "y", -3, 3, 0.1).name("transformY");
+        gui.add(box.position, "z", -3, 3, 0.1).name("transformZ");
+        gui.add(box.rotation, "x", 0, 6.28, 0.1).name("rotateX");
+        gui.add(box.rotation, "y", 0, 6.28, 0.1).name("rotateY");
+        gui.add(box.rotation, "z", 0, 6.28, 0.1).name("rotateZ");
+        gui.add(box, "visible");
+        gui.add(material, "wireframe");
+
+
+
+
+        //lightの追加
+        const light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(1, 1, 1);
+        scene.add(light);
+        gui.add(box.position, "x", -3, 3, 0.1).name("transformX");
+
+        //アニメーション関数
+        function animate() {
+
+            stats.begin(); //追加
+
+            controls.update();
+            renderer.render(scene, camera);
+
+            stats.end(); //追加
+
+            requestAnimationFrame(animate);
+        }
+
+        //animationを実行
+        animate();
+
+        //window size時の処理
+        function onWindowResize() {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        }
+
+        window.addEventListener("resize", onWindowResize);
+
+    </script>
+</body>
+
+</html>
